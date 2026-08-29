@@ -1,6 +1,7 @@
+from ui import InlineKeyboardButton
 import math
 import pycountry
-from hydrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from hydrogram.types import InlineKeyboardMarkup
 from config import USDT_RATE
 
 # ==================================================================
@@ -73,8 +74,8 @@ def get_pagination_keyboard(current_page, total_count, data_list, callback_prefi
     # 1. Zero Handling
     if total_count == 0:
         return InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔵 ❌ Out of Stock", callback_data="ignore")],
-            [InlineKeyboardButton("🔵 🔙 Back", callback_data="home")]
+            [InlineKeyboardButton("❌ Out of Stock", callback_data="ignore")],
+            [InlineKeyboardButton("🔙 Back", callback_data="home")]
         ])
 
     # 2. Total Pages Logic
@@ -116,9 +117,9 @@ def get_pagination_keyboard(current_page, total_count, data_list, callback_prefi
         # Previous
         if current_page > 1:
             
-            nav_buttons.append(InlineKeyboardButton("🔵 ⬅️", callback_data=f"{callback_prefix}_{current_page-1}"))
+            nav_buttons.append(InlineKeyboardButton("⬅️", callback_data=f"{callback_prefix}_{current_page-1}"))
         else:
-            nav_buttons.append(InlineKeyboardButton("🔵 ⏺", callback_data="ignore"))
+            nav_buttons.append(InlineKeyboardButton("⏺", callback_data="ignore"))
 
         # Counter
         nav_buttons.append(InlineKeyboardButton(f"📄 {current_page}/{total_pages}", callback_data="ignore"))
@@ -126,15 +127,15 @@ def get_pagination_keyboard(current_page, total_count, data_list, callback_prefi
         # Next
         if current_page < total_pages:
             
-            nav_buttons.append(InlineKeyboardButton("🔵 ➡️", callback_data=f"{callback_prefix}_{current_page+1}"))
+            nav_buttons.append(InlineKeyboardButton("➡️", callback_data=f"{callback_prefix}_{current_page+1}"))
         else:
-            nav_buttons.append(InlineKeyboardButton("🔵 ⏺", callback_data="ignore"))
+            nav_buttons.append(InlineKeyboardButton("⏺", callback_data="ignore"))
         
         keyboard.append(nav_buttons)
 
 
     # 6. Global Back Button
-    keyboard.append([InlineKeyboardButton("🔵 🔙 Back to Menu", callback_data="home")])
+    keyboard.append([InlineKeyboardButton("🔙 Back to Menu", callback_data="home")])
     
     return InlineKeyboardMarkup(keyboard)
 
