@@ -1,4 +1,4 @@
-hydrogram
+git+https://github.com/hydrogram/hydrogram.git@dev
 Pillow
 qrcode
 TgCrypto
