@@ -1,4 +1,4 @@
-from ui import InlineKeyboardButton
+from ui import InlineKeyboardButton, KeyboardButton
 import datetime
 from hydrogram import Client, filters, enums
 from hydrogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, CallbackQuery, Message
@@ -134,12 +134,22 @@ async def show_main_menu(client, message):
         f"👇 <i>Select a service from the keyboard below.</i>"
     )
 
+    # Native Telegram coloured reply buttons (green = positive, blue = normal).
     reply_kb = ReplyKeyboardMarkup(
         [
-            ["📱 Buy Accounts", "📂 Buy Sessions"],
-            ["💰 Deposit", "👤 My Profile"],
-            ["💰 Earn Money", "📞 Support"],
-            ["📖 How to Use"]
+            [
+                KeyboardButton("📱 Buy Accounts", style="success"),
+                KeyboardButton("📂 Buy Sessions", style="success"),
+            ],
+            [
+                KeyboardButton("💰 Deposit", style="success"),
+                KeyboardButton("👤 My Profile", style="primary"),
+            ],
+            [
+                KeyboardButton("💰 Earn Money", style="success"),
+                KeyboardButton("📞 Support", style="primary"),
+            ],
+            [KeyboardButton("📖 How to Use", style="primary")],
         ],
         resize_keyboard=True
     )
