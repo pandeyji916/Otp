@@ -1,7 +1,8 @@
+from ui import InlineKeyboardButton
 import datetime
 import os
 from hydrogram import Client, filters, enums
-from hydrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
+from hydrogram.types import InlineKeyboardMarkup, CallbackQuery, Message
 from config import STATIC_2FA_PASSWORD, LOG_CHANNEL, USDT_RATE
 from database import (
     get_unique_countries, get_buckets_by_country, 
@@ -291,7 +292,7 @@ async def show_country_products(c, cb):
             row_width=1
         )
         
-        kb.inline_keyboard.append([InlineKeyboardButton("🔵 🔙 Back to Countries", callback_data=f"cat_{category}")])
+        kb.inline_keyboard.append([InlineKeyboardButton("🔙 Back to Countries", callback_data=f"cat_{category}")])
 
         header_text = (
             f"<b>🚩 {country_name.upper()} - {category.upper()}</b>\n"
@@ -349,14 +350,14 @@ async def confirm_purchase_ui(c, cb):
 
         if can_buy:
             text += "\n\n✅ <i>Sufficient balance available.</i>"
-            confirm_btn = InlineKeyboardButton("🟢 ✅ Pay & Get Item", callback_data=f"exec_{category}_{product_id}")
+            confirm_btn = InlineKeyboardButton("✅ Pay & Get Item", callback_data=f"exec_{category}_{product_id}")
         else:
             text += f"\n\n❌ <b>Insufficient Funds!</b>\nNeed ₹{round(price_inr - balance_inr, 2)} more."
-            confirm_btn = InlineKeyboardButton("🟢 ➕ Deposit Funds", callback_data="deposit_home")
+            confirm_btn = InlineKeyboardButton("➕ Deposit Funds", callback_data="deposit_home")
 
         buttons = InlineKeyboardMarkup([
             [confirm_btn],
-            [InlineKeyboardButton("🔵 🔙 Back", callback_data=f"country_{category}_{country}")]
+            [InlineKeyboardButton("🔙 Back", callback_data=f"country_{category}_{country}")]
         ])
         
         await cb.message.edit_text(text, parse_mode=enums.ParseMode.HTML, reply_markup=buttons)
@@ -403,9 +404,9 @@ async def execute_order(c, cb):
         )
         
         assistant_btns = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🟢 🔄 Get Code", callback_data=f"otp_{order_id}")],
-            [InlineKeyboardButton("🟢 📱 Manage Logins", callback_data=f"mng_{order_id}")],
-            [InlineKeyboardButton("🟢 ✅ Done", callback_data="home")]
+            [InlineKeyboardButton("🔄 Get Code", callback_data=f"otp_{order_id}")],
+            [InlineKeyboardButton("📱 Manage Logins", callback_data=f"mng_{order_id}")],
+            [InlineKeyboardButton("✅ Done", callback_data="home")]
         ])
         
         await cb.message.edit_text(assistant_text, parse_mode=enums.ParseMode.HTML, reply_markup=assistant_btns)
@@ -422,7 +423,7 @@ async def execute_order(c, cb):
             "👇 <b>SESSION FILE BELOW</b>\n"
             "<i>Download and import into your tool.</i>"
         )
-        await cb.message.edit_text(success_text, parse_mode=enums.ParseMode.HTML, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🟢 🛍 Buy Again", callback_data=f"cat_{category}")]]))
+        await cb.message.edit_text(success_text, parse_mode=enums.ParseMode.HTML, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🛍 Buy Again", callback_data=f"cat_{category}")]]))
         
         #  Create .session file 
         try:
@@ -483,7 +484,7 @@ async def send_public_log(client, user, country, price, item_data, flag):
         
         # Hardcoded URL for optimization
         buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🟢 🛒 • Buy Now • 🛒", url="https://t.me/NexoraOTPSupport")]
+            [InlineKeyboardButton("🛒 • Buy Now • 🛒", url="https://t.me/NexoraOTPSupport")]
         ])
         
         await client.send_message(

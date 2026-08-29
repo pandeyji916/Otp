@@ -1,8 +1,9 @@
+from ui import InlineKeyboardButton
 import asyncio
 import qrcode
 import io
 from hydrogram import Client, filters, enums
-from hydrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply, CallbackQuery, Message
+from hydrogram.types import InlineKeyboardMarkup, ForceReply, CallbackQuery, Message
 from config import ADMINS, PAYMENT_UPI_ID, AUTO_PAYMENT_UPI_ID, MANUAL_PAYMENT_UPI_ID, BINANCE_ID, TRC20_ADDRESS, ADMIN_GROUP_ID, BHARATPE_MERCHANT_ID, BHARATPE_TOKEN, DIVIDER
 import aiohttp
 from database import get_user, update_balance, create_deposit, get_deposit
@@ -114,9 +115,9 @@ async def safe_deposit_menu(client, message_or_callback):
     """
 
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔵 💸 UPI", callback_data="pay_upi_start")],
-        [InlineKeyboardButton("🔵 🪙 Crypto", callback_data="pay_crypto")],
-        [InlineKeyboardButton("🔵 🔙 Back to Home", callback_data="home")]
+        [InlineKeyboardButton("💸 UPI", callback_data="pay_upi_start")],
+        [InlineKeyboardButton("🪙 Crypto", callback_data="pay_crypto")],
+        [InlineKeyboardButton("🔙 Back to Home", callback_data="home")]
     ])
     text = "<b>🏦 ADD FUNDS</b>\nLoading Wallet..."
     user_id = message_or_callback.from_user.id
@@ -215,9 +216,9 @@ async def pay_upi_method_menu(c, cb):
         "Payment screenshot admin ko bheja jayega aur admin manually approve/reject karega."
     )
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🟢 ⚡ Automatic Payment Verification", callback_data="upi_auto_start")],
-        [InlineKeyboardButton("🔵 📝 Manual Verification", callback_data="upi_manual_start")],
-        [InlineKeyboardButton("🔴 🔙 Cancel", callback_data="deposit_home")]
+        [InlineKeyboardButton("⚡ Automatic Payment Verification", callback_data="upi_auto_start")],
+        [InlineKeyboardButton("📝 Manual Verification", callback_data="upi_manual_start")],
+        [InlineKeyboardButton("🔙 Cancel", callback_data="deposit_home")]
     ])
 
     try:
@@ -247,7 +248,7 @@ async def _start_upi_amount(c, cb, verification_mode):
         "<i>Amount number me type karke bhejein (e.g. 500)</i>"
     )
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔴 🔙 Cancel", callback_data="deposit_home")]
+        [InlineKeyboardButton("🔙 Cancel", callback_data="deposit_home")]
     ])
 
     try:
@@ -319,8 +320,8 @@ async def handle_deposit_text_input(c, msg):
                 "⚠️ <i>Admin payment verify karke manually balance add karega.</i>"
             )
             buttons = InlineKeyboardMarkup([
-                [InlineKeyboardButton("🟢 📤 Upload Payment Screenshot", callback_data="submit_upi_manual_proof")],
-                [InlineKeyboardButton("🔴 🔙 Cancel", callback_data="deposit_home")]
+                [InlineKeyboardButton("📤 Upload Payment Screenshot", callback_data="submit_upi_manual_proof")],
+                [InlineKeyboardButton("🔙 Cancel", callback_data="deposit_home")]
             ])
         else:
             # Automatic UPI: existing BharatPe UTR verification flow.
@@ -345,8 +346,8 @@ async def handle_deposit_text_input(c, msg):
                 "👇 <b>Niche diye gaye button par click karke UTR submit karein:</b>"
             )
             buttons = InlineKeyboardMarkup([
-                [InlineKeyboardButton("🟢 ✍️ Submit UTR", callback_data="submit_upi_utr")],
-                [InlineKeyboardButton("🔴 🔙 Cancel", callback_data="deposit_home")]
+                [InlineKeyboardButton("✍️ Submit UTR", callback_data="submit_upi_utr")],
+                [InlineKeyboardButton("🔙 Cancel", callback_data="deposit_home")]
             ])
 
         sent_msg = await c.send_photo(
@@ -440,8 +441,8 @@ async def handle_deposit_text_input(c, msg):
                 "3. Kya UTR number bilkul sahi enter kiya hai?\n\n"
                 "<i>Thodi der baad dobara check karein ya direct Support se contact karein.</i>",
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🔵 ✍️ Retry UTR", callback_data="submit_upi_utr")],
-                    [InlineKeyboardButton("🔴 🔙 Cancel", callback_data="deposit_home")]
+                    [InlineKeyboardButton("✍️ Retry UTR", callback_data="submit_upi_utr")],
+                    [InlineKeyboardButton("🔙 Cancel", callback_data="deposit_home")]
                 ]),
                 parse_mode=enums.ParseMode.HTML
             )
@@ -452,8 +453,8 @@ async def handle_deposit_text_input(c, msg):
                 "⚠️ <b>Verification API Error!</b>\n"
                 "BharatPe API respond nahi kar rahi hai. Kripya thodi der baad dobara UTR submit karein.",
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🔵 ✍️ Try Again", callback_data="submit_upi_utr")],
-                    [InlineKeyboardButton("🔴 🔙 Cancel", callback_data="deposit_home")]
+                    [InlineKeyboardButton("✍️ Try Again", callback_data="submit_upi_utr")],
+                    [InlineKeyboardButton("🔙 Cancel", callback_data="deposit_home")]
                 ]),
                 parse_mode=enums.ParseMode.HTML
             )
@@ -496,7 +497,7 @@ async def ask_upi_utr(c, cb):
 async def pay_crypto(c, cb):
     # 1. Safety Defaults
     text = "Loading Crypto Details..."
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("🔵 🔙 Back", callback_data="deposit_home")]])
+    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="deposit_home")]])
     
     try:
         clear_deposit_session(cb.from_user.id)
@@ -514,8 +515,8 @@ async def pay_crypto(c, cb):
         )
         
         buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🟢 📤 Upload Screenshot", callback_data="submit_crypto_proof")],
-            [InlineKeyboardButton("🔵 🔙 Back", callback_data="deposit_home")]
+            [InlineKeyboardButton("📤 Upload Screenshot", callback_data="submit_crypto_proof")],
+            [InlineKeyboardButton("🔙 Back", callback_data="deposit_home")]
         ])
         
         # 2. Smart Send 
@@ -608,8 +609,8 @@ async def handle_payment_proof(c, msg):
     ref = f"amt{amount}" if amount else "crypto"
 
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🟢 ✅ Add Funds", callback_data=f"admin_approve_{user_id}_{ref}")],
-        [InlineKeyboardButton("🔴 ❌ Reject", callback_data=f"admin_reject_{user_id}")]
+        [InlineKeyboardButton("✅ Add Funds", callback_data=f"admin_approve_{user_id}_{ref}")],
+        [InlineKeyboardButton("❌ Reject", callback_data=f"admin_reject_{user_id}")]
     ])
 
     try:

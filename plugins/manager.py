@@ -1,7 +1,8 @@
+from ui import InlineKeyboardButton
 import asyncio
 import re
 from hydrogram import Client, filters, enums
-from hydrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from hydrogram.types import InlineKeyboardMarkup, CallbackQuery
 from hydrogram.errors import (
     SessionPasswordNeeded, AuthKeyUnregistered, 
     UserDeactivated, SessionRevoked, UserRestricted,
@@ -125,9 +126,9 @@ async def get_otp_handler(c, cb):
             )
 
         buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🟢 🔄 Refresh Again", callback_data=f"otp_{order_id}")],
-            [InlineKeyboardButton("🟢 📱 Manage Logins", callback_data=f"mng_{order_id}")],
-            [InlineKeyboardButton("🟢 ✅ Done", callback_data=f"finish_order_{order_id}")]
+            [InlineKeyboardButton("🔄 Refresh Again", callback_data=f"otp_{order_id}")],
+            [InlineKeyboardButton("📱 Manage Logins", callback_data=f"mng_{order_id}")],
+            [InlineKeyboardButton("✅ Done", callback_data=f"finish_order_{order_id}")]
         ])
         
 
@@ -141,12 +142,12 @@ async def get_otp_handler(c, cb):
             "<b>❌ SESSION DEAD</b>\n"
             "This session is revoked or invalid.\n"
             "Contact admin.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔵 🔙 Home", callback_data="home")]])
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Home", callback_data="home")]])
         )
     except Exception as e:
         #  Extra safety loop
         if "MESSAGE_NOT_MODIFIED" not in str(e):
-            await cb.message.edit_text(f"⚠️ Error: {str(e)[:50]}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔵 🔙 Back", callback_data="home")]]))
+            await cb.message.edit_text(f"⚠️ Error: {str(e)[:50]}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="home")]]))
         else:
             await cb.answer("⏳ No new OTP yet!", show_alert=True)
 
@@ -218,7 +219,7 @@ async def manage_sessions_handler(c, cb):
                 # Other devices
                 buttons.append([InlineKeyboardButton(f"📱 {a.device_model} | ❌ KILL", callback_data=f"kill_{order_id}_{a.hash}")])
         
-        buttons.append([InlineKeyboardButton("🔵 🔙 Back", callback_data=f"otp_{order_id}")])
+        buttons.append([InlineKeyboardButton("🔙 Back", callback_data=f"otp_{order_id}")])
         
         await cb.message.edit_text(
             f"<b>📱 ACTIVE SESSIONS ({len(auths.authorizations)})</b>\n"
@@ -233,10 +234,10 @@ async def manage_sessions_handler(c, cb):
     except (AuthKeyUnregistered, SessionRevoked, UserDeactivated):
         await cb.message.edit_text(
             "<b>❌ SESSION DEAD</b>\nCannot fetch devices.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔵 🔙 Back", callback_data="home")]])
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="home")]])
         )
     except Exception as e:
-        await cb.message.edit_text(f"❌ Error: {e}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔵 🔙 Back", callback_data="home")]]))
+        await cb.message.edit_text(f"❌ Error: {e}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="home")]]))
     finally:
         if temp_client.is_connected:
             await temp_client.stop()
@@ -313,7 +314,7 @@ async def finish_order_summary(c, cb):
         order = await col_orders.find_one({"_id": order_id})
         
     if not order:
-        return await cb.message.edit_text("✅ <b>Thank You!</b>", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔵 🏠 Home", callback_data="home")]]))
+        return await cb.message.edit_text("✅ <b>Thank You!</b>", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Home", callback_data="home")]]))
 
     # Extract Details
     item_name = f"{order.get('flag', '🏳️')} {order.get('country', 'Unknown')}"
@@ -333,8 +334,8 @@ async def finish_order_summary(c, cb):
     )
     
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🟢 🛍 Buy More", callback_data="home")],
-        [InlineKeyboardButton("🟢 📞 Support", callback_data="help")]
+        [InlineKeyboardButton("🛍 Buy More", callback_data="home")],
+        [InlineKeyboardButton("📞 Support", callback_data="help")]
     ])
     
     await cb.message.edit_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.HTML)

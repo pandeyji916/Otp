@@ -1,3 +1,4 @@
+from ui import InlineKeyboardButton
 import os
 import asyncio
 import pycountry
@@ -7,7 +8,7 @@ from hydrogram.errors import (
     SessionPasswordNeeded, PhoneCodeInvalid, PhoneCodeExpired, 
     BadRequest, AuthKeyUnregistered, UserDeactivated, SessionRevoked
 )
-from hydrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
+from hydrogram.types import InlineKeyboardMarkup, CallbackQuery, Message
 from config import ADMINS, LOG_CHANNEL, STATIC_2FA_PASSWORD, API_ID, API_HASH
 from database import (
     col_stock, add_stock, get_unique_buckets, get_unique_countries,
@@ -69,10 +70,10 @@ async def select_upload_type(c, cb):
         )
         base_data = f"{country}_{price}_{year}"
         buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔵 📄 TXT File", callback_data=f"setmode_txt_{base_data}")],
-            [InlineKeyboardButton("🔵 ✏️ Direct Text", callback_data=f"setmode_text_{base_data}")],
-            [InlineKeyboardButton("🟢 📲 Login (Num)", callback_data=f"setmode_login_{base_data}")],
-            [InlineKeyboardButton("🔵 🔙 Back", callback_data="admin_stock")]
+            [InlineKeyboardButton("📄 TXT File", callback_data=f"setmode_txt_{base_data}")],
+            [InlineKeyboardButton("✏️ Direct Text", callback_data=f"setmode_text_{base_data}")],
+            [InlineKeyboardButton("📲 Login (Num)", callback_data=f"setmode_login_{base_data}")],
+            [InlineKeyboardButton("🔙 Back", callback_data="admin_stock")]
         ])
         await cb.message.edit_text(text, parse_mode=enums.ParseMode.HTML, reply_markup=buttons)
     except Exception as e:
@@ -88,10 +89,10 @@ async def manual_activate_upload(client, message, country, price, year, flag, ad
     )
     base_data = f"{country}_{price}_{year}"
     buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔵 📄 TXT File", callback_data=f"setmode_txt_{base_data}")],
-            [InlineKeyboardButton("🔵 ✏️ Direct Text", callback_data=f"setmode_text_{base_data}")],
-            [InlineKeyboardButton("🟢 📲 Login (Num)", callback_data=f"setmode_login_{base_data}")],
-            [InlineKeyboardButton("🔴 🛑 Cancel", callback_data="admin_stock")]
+            [InlineKeyboardButton("📄 TXT File", callback_data=f"setmode_txt_{base_data}")],
+            [InlineKeyboardButton("✏️ Direct Text", callback_data=f"setmode_text_{base_data}")],
+            [InlineKeyboardButton("📲 Login (Num)", callback_data=f"setmode_login_{base_data}")],
+            [InlineKeyboardButton("🛑 Cancel", callback_data="admin_stock")]
     ])
     
     if hasattr(message, "edit_text"):
@@ -142,7 +143,7 @@ async def activate_upload_mode(c, cb):
     )
     await cb.message.edit_text(
         text, parse_mode=enums.ParseMode.HTML,
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 🛑 STOP & CANCEL", callback_data="admin_stock")]])
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🛑 STOP & CANCEL", callback_data="admin_stock")]])
     )
 
 # ==================================================================
@@ -153,10 +154,10 @@ def get_dialpad_markup(current_code=""):
     header = f"<code>{current_code if current_code else 'ENTER OTP'}</code>"
     line = "━━━━━━━━━━━━━━━━━━━━"
     keyboard = [
-        [InlineKeyboardButton("🔵 7", callback_data="num_7"), InlineKeyboardButton("🔵 8", callback_data="num_8"), InlineKeyboardButton("🔵 9", callback_data="num_9")],
-        [InlineKeyboardButton("🔵 4", callback_data="num_4"), InlineKeyboardButton("🔵 5", callback_data="num_5"), InlineKeyboardButton("🔵 6", callback_data="num_6")],
-        [InlineKeyboardButton("🔵 1", callback_data="num_1"), InlineKeyboardButton("🔵 2", callback_data="num_2"), InlineKeyboardButton("🔵 3", callback_data="num_3")],
-        [InlineKeyboardButton("🔵 ⌫", callback_data="num_back"), InlineKeyboardButton("🔵 0", callback_data="num_0"), InlineKeyboardButton("🟢 ✅ LOGIN", callback_data="num_done")]
+        [InlineKeyboardButton("7", callback_data="num_7"), InlineKeyboardButton("8", callback_data="num_8"), InlineKeyboardButton("9", callback_data="num_9")],
+        [InlineKeyboardButton("4", callback_data="num_4"), InlineKeyboardButton("5", callback_data="num_5"), InlineKeyboardButton("6", callback_data="num_6")],
+        [InlineKeyboardButton("1", callback_data="num_1"), InlineKeyboardButton("2", callback_data="num_2"), InlineKeyboardButton("3", callback_data="num_3")],
+        [InlineKeyboardButton("⌫", callback_data="num_back"), InlineKeyboardButton("0", callback_data="num_0"), InlineKeyboardButton("✅ LOGIN", callback_data="num_done")]
     ]
     return header, line, InlineKeyboardMarkup(keyboard)
 
@@ -321,7 +322,7 @@ async def stock_input_listener(c, msg):
             await c.edit_message_text(
                 user_id, state["menu_id"], 
                 "<b>📲 NEXT LOGIN</b>\nSend next Phone Number (+91...)",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 🛑 Stop", callback_data="admin_stock")]])
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🛑 Stop", callback_data="admin_stock")]])
             )
             
         except Exception as e:
@@ -381,7 +382,7 @@ async def handle_dialpad(c, cb):
             
             await cb.message.edit_text(
                 f"✅ <b>LOGIN SUCCESS!</b>\nSaved: {me.first_name} ({me.id})\n\nReady for next...",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 🛑 Stop", callback_data="admin_stock")]])
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🛑 Stop", callback_data="admin_stock")]])
             )
             
             
@@ -397,7 +398,7 @@ async def handle_dialpad(c, cb):
                 "🔐 <b>TWO-STEP VERIFICATION DETECTED</b>\n\n"
                 "Please send your <b>2FA Password</b> here in chat.\n"
                 "<i>(Message will be auto-deleted)</i>",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 ❌ Cancel", callback_data="admin_stock")]])
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="admin_stock")]])
             )
             return
 
@@ -464,8 +465,8 @@ async def confirm_delete(c, cb):
     
     text = f"<b>⚠️ WARNING!</b>\n\nDelete ALL fresh stock for <b>{country}</b>?"
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🟢 ✅ YES", callback_data=f"exec_del_{country}")],
-        [InlineKeyboardButton("🔵 🔙 NO", callback_data="admin_delete_menu")]
+        [InlineKeyboardButton("✅ YES", callback_data=f"exec_del_{country}")],
+        [InlineKeyboardButton("🔙 NO", callback_data="admin_delete_menu")]
     ])
     await cb.message.edit_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.HTML)
 

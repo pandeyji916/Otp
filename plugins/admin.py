@@ -1,8 +1,9 @@
+from ui import InlineKeyboardButton
 import os
 import asyncio
 import pycountry
 from hydrogram import Client, filters, enums
-from hydrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
+from hydrogram.types import InlineKeyboardMarkup, CallbackQuery, Message
 from config import ADMINS, LOG_CHANNEL
 from database import (
     db, add_stock, get_unique_buckets, get_user, update_balance, 
@@ -53,17 +54,17 @@ async def safe_show_dashboard(client, message_or_callback):
 
     buttons = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("🔵 📦 Stock Manager", callback_data="admin_stock"),
+            InlineKeyboardButton("📦 Stock Manager", callback_data="admin_stock"),
             InlineKeyboardButton(f"💰 Payments ({pending_crypto})", callback_data="admin_payments")
         ],
       
         [
-            InlineKeyboardButton("🔵 📢 Broadcast", callback_data="admin_broadcast"),
-            InlineKeyboardButton("🔵 👤 User Manager", callback_data="admin_users")
+            InlineKeyboardButton("📢 Broadcast", callback_data="admin_broadcast"),
+            InlineKeyboardButton("👤 User Manager", callback_data="admin_users")
         ],
         [
-            InlineKeyboardButton("🔵 ⚙️ Settings & FSub", callback_data="admin_settings"),
-            InlineKeyboardButton("🔴 ❌ Close", callback_data="close_admin")
+            InlineKeyboardButton("⚙️ Settings & FSub", callback_data="admin_settings"),
+            InlineKeyboardButton("❌ Close", callback_data="close_admin")
         ]
     ])
 
@@ -108,10 +109,10 @@ async def stock_menu(c, cb):
         "<b>🗑 Clear Stock:</b> Delete items by country."
     )
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔵 📂 Present Stock (View All)", callback_data="goto_present_admin")],
-        [InlineKeyboardButton("🔵 🆕 New Bucket (Quick Create)", callback_data="goto_new_admin")],
-        [InlineKeyboardButton("🔴 🗑 Clear Stock (Bulk)", callback_data="admin_delete_menu")],
-        [InlineKeyboardButton("🔵 🔙 Back to Dashboard", callback_data="admin_home")]
+        [InlineKeyboardButton("📂 Present Stock (View All)", callback_data="goto_present_admin")],
+        [InlineKeyboardButton("🆕 New Bucket (Quick Create)", callback_data="goto_new_admin")],
+        [InlineKeyboardButton("🗑 Clear Stock (Bulk)", callback_data="admin_delete_menu")],
+        [InlineKeyboardButton("🔙 Back to Dashboard", callback_data="admin_home")]
     ])
     await cb.message.edit_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.HTML)
 
@@ -128,7 +129,7 @@ async def show_present_countries(c, cb):
         flag = item.get("flag", "🏳️")
         buttons.append([InlineKeyboardButton(f"{flag} {name}", callback_data=f"adm_cty_{name}")])
     
-    buttons.append([InlineKeyboardButton("🔵 🔙 Back", callback_data="admin_stock")])
+    buttons.append([InlineKeyboardButton("🔙 Back", callback_data="admin_stock")])
     await cb.message.edit_text("<b>🌍 Select Country to Manage:</b>", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=enums.ParseMode.HTML)
 
 # Step 2: Show Buckets in that country for Admin
@@ -144,7 +145,7 @@ async def show_country_buckets_admin(c, cb):
         cb_data = f"pre_upload_{country_name}_{b['price']}_{b['year']}"
         buttons.append([InlineKeyboardButton(btn_text, callback_data=cb_data)])
     
-    buttons.append([InlineKeyboardButton("🔵 🔙 Back to Countries", callback_data="goto_present_admin")])
+    buttons.append([InlineKeyboardButton("🔙 Back to Countries", callback_data="goto_present_admin")])
     await cb.message.edit_text(f"<b>🚩 Managing: {country_name}</b>\nClick a bucket to add more stock:", reply_markup=InlineKeyboardMarkup(buttons), parse_mode=enums.ParseMode.HTML)
 
 # Create New Bucket Trigger
@@ -155,7 +156,7 @@ async def new_bucket_ask(c, cb):
         "<b>🆕 Smart Bucket Creator</b>\n\n"
         "Send: <code>Country Price Year</code>\n"
         "Example: <code>USA 100 2024</code>",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 🔙 Cancel", callback_data="admin_stock")]]),
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Cancel", callback_data="admin_stock")]]),
         parse_mode=enums.ParseMode.HTML
     )
 
@@ -172,8 +173,8 @@ async def user_manager_menu(c, cb):
         "Search a user by ID to modify balance or ban/unban them."
     )
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔵 🔍 Search User by ID", callback_data="search_user_input")],
-        [InlineKeyboardButton("🔵 🔙 Back", callback_data="admin_home")]
+        [InlineKeyboardButton("🔍 Search User by ID", callback_data="search_user_input")],
+        [InlineKeyboardButton("🔙 Back", callback_data="admin_home")]
     ])
     await cb.message.edit_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.HTML)
 
@@ -182,7 +183,7 @@ async def search_input_trigger(c, cb):
     admin_session[cb.from_user.id] = {"mode": "searching_user", "menu_id": cb.message.id}
     await cb.message.edit_text(
         "<b>🔍 Enter User ID:</b>",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 🔙 Cancel", callback_data="admin_users")]]),
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Cancel", callback_data="admin_users")]]),
         parse_mode=enums.ParseMode.HTML
     )
 
@@ -193,7 +194,7 @@ async def add_money_trigger(c, cb):
     await cb.message.edit_text(
         f"<b>➕ Add Balance to `{target_id}`</b>\n\n"
         "Enter the amount in INR (Numbers only):",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 🔙 Cancel", callback_data="admin_users")]]),
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Cancel", callback_data="admin_users")]]),
         parse_mode=enums.ParseMode.HTML
     )
 
@@ -205,7 +206,7 @@ async def deduct_money_trigger(c, cb):
     await cb.message.edit_text(
         f"<b>➖ Deduct Balance from `{target_id}`</b>\n\n"
         "Enter the amount in INR to DEDUCT (Numbers only):",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 🔙 Cancel", callback_data="admin_users")]]),
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Cancel", callback_data="admin_users")]]),
         parse_mode=enums.ParseMode.HTML
     )
 
@@ -256,11 +257,11 @@ async def admin_payments_menu(c, cb):
     )
     buttons = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("🟢 ✅ Approve", callback_data=f"pay_approve_{txn['_id']}"),
-            InlineKeyboardButton("🔴 ❌ Reject", callback_data=f"pay_reject_{txn['_id']}")
+            InlineKeyboardButton("✅ Approve", callback_data=f"pay_approve_{txn['_id']}"),
+            InlineKeyboardButton("❌ Reject", callback_data=f"pay_reject_{txn['_id']}")
         ],
-        [InlineKeyboardButton("🟢 ➕ Manual Balance (UTR)", callback_data="manual_bal_input")],
-        [InlineKeyboardButton("🔵 🔙 Back", callback_data="admin_home")]
+        [InlineKeyboardButton("➕ Manual Balance (UTR)", callback_data="manual_bal_input")],
+        [InlineKeyboardButton("🔙 Back", callback_data="admin_home")]
     ])
     await cb.message.edit_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.HTML)
 
@@ -274,9 +275,9 @@ async def bc_menu(c, cb):
     clear_session(cb.from_user.id)
     text = "<b>📢 BROADCAST CENTER</b>\n\nSelect message type:"
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔵 📣 Simple Message", callback_data="bc_type_simple")],
-        [InlineKeyboardButton("🔵 📌 Pin Message", callback_data="bc_type_pin")],
-        [InlineKeyboardButton("🔵 🔙 Back", callback_data="admin_home")]
+        [InlineKeyboardButton("📣 Simple Message", callback_data="bc_type_simple")],
+        [InlineKeyboardButton("📌 Pin Message", callback_data="bc_type_pin")],
+        [InlineKeyboardButton("🔙 Back", callback_data="admin_home")]
     ])
     await cb.message.edit_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.HTML)
 
@@ -287,7 +288,7 @@ async def bc_input_trigger(c, cb):
     await cb.message.edit_text(
         f"<b>📢 Broadcast ({b_type.upper()})</b>\n\n"
         "Send the message (Text/Media/Forward) you want to send to ALL users.",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 🔙 Cancel", callback_data="admin_broadcast")]]),
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Cancel", callback_data="admin_broadcast")]]),
         parse_mode=enums.ParseMode.HTML
     )
 
@@ -323,11 +324,11 @@ async def settings_menu(c, cb):
         "<i>Select a setting to modify:</i>"
     )
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🟢 📢 Add FSub Channel", callback_data="set_fsub_input")],
-        [InlineKeyboardButton("🔴 🗑 Clear All FSubs", callback_data="remove_fsub")],
-        [InlineKeyboardButton("🔵 💵 Set USDT Rate", callback_data="set_usdt_input")],
+        [InlineKeyboardButton("📢 Add FSub Channel", callback_data="set_fsub_input")],
+        [InlineKeyboardButton("🗑 Clear All FSubs", callback_data="remove_fsub")],
+        [InlineKeyboardButton("💵 Set USDT Rate", callback_data="set_usdt_input")],
         [InlineKeyboardButton(f"🚧 Toggle Maintenance", callback_data="toggle_maint")],
-        [InlineKeyboardButton("🔵 🔙 Back", callback_data="admin_home")]
+        [InlineKeyboardButton("🔙 Back", callback_data="admin_home")]
     ])
     await cb.message.edit_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.HTML)
 
@@ -340,7 +341,7 @@ async def set_fsub_trigger(c, cb):
         "1. Add me to the Channel/Group as Admin.\n"
         "2. Send the <b>Channel ID</b> here (e.g., -100xxxx).\n\n"
         "<i>I will auto-generate the invite link and add it to the list.</i>",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 🔙 Cancel", callback_data="admin_settings")]]),
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Cancel", callback_data="admin_settings")]]),
         parse_mode=enums.ParseMode.HTML
     )
 
@@ -371,7 +372,7 @@ async def set_usdt_trigger(c, cb):
         "<b>💵 SET USDT RATE</b>\n\n"
         "Send the new rate for <b>1 USDT</b> in INR.\n"
         "Example: <code>92.5</code>",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔴 🔙 Cancel", callback_data="admin_settings")]])
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Cancel", callback_data="admin_settings")]])
     )
 
 # ==================================================================
@@ -405,15 +406,15 @@ async def admin_master_listener(c, msg):
                     )
                     
                     is_banned = user.get("is_banned", False)
-                    ban_btn = InlineKeyboardButton("🔴 ✅ Unban User", callback_data=f"unban_{target_id}") if is_banned else InlineKeyboardButton("🔴 🚫 Ban User", callback_data=f"ban_{target_id}")
+                    ban_btn = InlineKeyboardButton("✅ Unban User", callback_data=f"unban_{target_id}") if is_banned else InlineKeyboardButton("🚫 Ban User", callback_data=f"ban_{target_id}")
                     
                     btns = InlineKeyboardMarkup([
                         [
-                            InlineKeyboardButton("🟢 ➕ Add", callback_data=f"addmoney_{target_id}"),
-                            InlineKeyboardButton("🔵 ➖ Deduct", callback_data=f"deductmoney_{target_id}")
+                            InlineKeyboardButton("➕ Add", callback_data=f"addmoney_{target_id}"),
+                            InlineKeyboardButton("➖ Deduct", callback_data=f"deductmoney_{target_id}")
                         ],
                         [ban_btn],
-                        [InlineKeyboardButton("🔵 🔙 Back", callback_data="admin_users")]
+                        [InlineKeyboardButton("🔙 Back", callback_data="admin_users")]
                     ])
 
                     await c.edit_message_text(msg.chat.id, menu_id, info, reply_markup=btns, parse_mode=enums.ParseMode.HTML)
@@ -431,7 +432,7 @@ async def admin_master_listener(c, msg):
                 await msg.delete()
                 
                 await c.edit_message_text(msg.chat.id, menu_id, f"✅ Added ₹{amount} to User `{target}`", 
-                                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔵 🏠 Dashboard", callback_data="admin_home")]]), parse_mode=enums.ParseMode.HTML)
+                                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Dashboard", callback_data="admin_home")]]), parse_mode=enums.ParseMode.HTML)
                 clear_session(user_id)
             except: pass
 
@@ -501,7 +502,7 @@ async def admin_master_listener(c, msg):
                 await msg.delete()
                 
                 await c.edit_message_text(msg.chat.id, menu_id, f"✅ Deducted ₹{amount} from User `{target}`", 
-                                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔵 🏠 Dashboard", callback_data="admin_home")]]), parse_mode=enums.ParseMode.HTML)
+                                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Dashboard", callback_data="admin_home")]]), parse_mode=enums.ParseMode.HTML)
                 clear_session(user_id)
             except Exception as e:
                 pass
@@ -527,7 +528,7 @@ async def admin_master_listener(c, msg):
                     )
                     await c.edit_message_text(
                         msg.chat.id, menu_id, success_text,
-                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔵 🔙 Back", callback_data="admin_settings")]])
+                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="admin_settings")]])
                     )
                     clear_session(user_id)
                 except Exception as e:
@@ -546,7 +547,7 @@ async def admin_master_listener(c, msg):
                 await msg.delete()
                 await c.edit_message_text(
                     msg.chat.id, menu_id, f"✅ <b>USDT Rate Updated:</b> ₹{rate}",
-                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔵 🔙 Back", callback_data="admin_settings")]])
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="admin_settings")]])
                 )
                 clear_session(user_id)
             except ValueError:

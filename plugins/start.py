@@ -1,6 +1,7 @@
+from ui import InlineKeyboardButton
 import datetime
 from hydrogram import Client, filters, enums
-from hydrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, CallbackQuery, Message
+from hydrogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, CallbackQuery, Message
 from database import add_user, get_user, get_fsub_list, get_maintenance, db, col_users, set_referrer, col_orders, col_payments
 from utils import format_price, get_divider, get_pagination_keyboard
 from config import DEFAULT_FSUB_ID, DEFAULT_FSUB_LINK, ADMINS
@@ -9,11 +10,9 @@ from config import DEFAULT_FSUB_ID, DEFAULT_FSUB_LINK, ADMINS
 # 🚦 CONFIG
 # ==================================================================
 MAIN_BUTTONS = [
-    "🟢 📱 Buy Accounts", "🟢 📂 Buy Sessions",
-    "🟢 💰 Deposit", "🔵 👤 My Profile",
-    "🟢 💰 Earn Money", "🔵 📞 Support", "🔵 📖 How to Use",
-    "📱 Buy Accounts", "📂 Buy Sessions", "💰 Deposit",
-    "👤 My Profile", "💰 Earn Money", "📞 Support", "📖 How to Use"
+    "📱 Buy Accounts", "📂 Buy Sessions", 
+    "💰 Deposit", "👤 My Profile", 
+    "💰 Earn Money", "📞 Support", "📖 How to Use"
 ]
 
 # ==================================================================
@@ -78,8 +77,8 @@ async def show_terms(client, message):
         "<i>By clicking 'Accept', you agree to all the terms.</i>"
     )
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🟢 ✅ I Accept & Agree", callback_data="accept_terms")],
-        [InlineKeyboardButton("🔴 ❌ Decline", callback_data="decline_terms")]
+        [InlineKeyboardButton("✅ I Accept & Agree", callback_data="accept_terms")],
+        [InlineKeyboardButton("❌ Decline", callback_data="decline_terms")]
     ])
     await safe_send(message, text, buttons)
 
@@ -101,7 +100,7 @@ async def show_fsub(client, message, missing_channels):
         buttons.append([InlineKeyboardButton(btn_text, url=channel.get('link', DEFAULT_FSUB_LINK))])
     
     # Add Verify Button 
-    buttons.append([InlineKeyboardButton("🟢 ✅ Verify Membership", callback_data="verify_fsub")])
+    buttons.append([InlineKeyboardButton("✅ Verify Membership", callback_data="verify_fsub")])
     
     await safe_send(message, text, InlineKeyboardMarkup(buttons))
 
@@ -137,10 +136,10 @@ async def show_main_menu(client, message):
 
     reply_kb = ReplyKeyboardMarkup(
         [
-            ["🟢 📱 Buy Accounts", "🟢 📂 Buy Sessions"],
-            ["🟢 💰 Deposit", "🔵 👤 My Profile"],
-            ["🟢 💰 Earn Money", "🔵 📞 Support"],
-            ["🔵 📖 How to Use"]
+            ["📱 Buy Accounts", "📂 Buy Sessions"],
+            ["💰 Deposit", "👤 My Profile"],
+            ["💰 Earn Money", "📞 Support"],
+            ["📖 How to Use"]
         ],
         resize_keyboard=True
     )
@@ -207,7 +206,7 @@ async def handle_reply_text(c, msg):
     if await get_maintenance() and user_id not in ADMINS:
         return await msg.reply_text("🚧 Maintenance Mode ON")
 
-    btn_text = (msg.text or "").replace("🟢 ", "").replace("🔵 ", "").replace("🔴 ", "")
+    btn_text = msg.text
 
     # Admin Bypass Logic
     if user_id not in ADMINS:
@@ -322,12 +321,12 @@ async def show_profile_ui(c, source):
     )
     
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🟢 💳 Deposit Now", callback_data="deposit_home")],
+        [InlineKeyboardButton("💳 Deposit Now", callback_data="deposit_home")],
         [
-            InlineKeyboardButton("🔵 🛍 My Orders", callback_data="my_orders_list"),
-            InlineKeyboardButton("🟢 💸 My Payments", callback_data="my_payments_list")
+            InlineKeyboardButton("🛍 My Orders", callback_data="my_orders_list"),
+            InlineKeyboardButton("💸 My Payments", callback_data="my_payments_list")
         ],
-        [InlineKeyboardButton("🔵 🔙 Back to Menu", callback_data="home")]
+        [InlineKeyboardButton("🔙 Back to Menu", callback_data="home")]
     ])
     
     await safe_send(source, text, buttons)
@@ -395,7 +394,7 @@ async def show_orders_history(c, cb):
     )
     
     # Back Button
-    kb.inline_keyboard.append([InlineKeyboardButton("🔵 🔙 Back to Profile", callback_data="my_profile")])
+    kb.inline_keyboard.append([InlineKeyboardButton("🔙 Back to Profile", callback_data="my_profile")])
 
     await safe_send(cb, "<b>🛍 MY ORDERS HISTORY</b>\n<i>Click to view details/OTP.</i>", kb)
 
@@ -446,7 +445,7 @@ async def show_payments_history(c, cb):
     )
 
     # Back Button
-    kb.inline_keyboard.append([InlineKeyboardButton("🔵 🔙 Back to Profile", callback_data="my_profile")])
+    kb.inline_keyboard.append([InlineKeyboardButton("🔙 Back to Profile", callback_data="my_profile")])
 
     await safe_send(cb, "<b>💸 MY PAYMENT HISTORY</b>\n<i>Last 50 Transactions.</i>", kb)
 
