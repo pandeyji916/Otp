@@ -165,7 +165,7 @@ async def show_main_menu(client, message):
 # 🚦 STEP 2: HANDLERS
 # ==================================================================
 
-@Client.on_message(filters.command("start") & filters.private)
+@Client.on_message(filters.command("start") & filters.private, group=-10)
 async def start_handler(c, msg):
     user_id = msg.from_user.id
     
@@ -201,14 +201,10 @@ async def start_handler(c, msg):
     
     await show_main_menu(c, msg)
 
-@Client.on_message(filters.text & filters.private, group=1)
+@Client.on_message(filters.text & filters.private & ~filters.command(["start", "help", "commands", "menu", "deposit", "redeem", "admin", "add_redeem"]), group=1)
 async def handle_reply_text(c, msg):
-    if msg.text.startswith("/"):
-        msg.continue_propagation()
-        return
-
-    if msg.text not in MAIN_BUTTONS:
-        msg.continue_propagation()
+    # Commands are excluded by the handler filter so command plugins always get them.
+    if not msg.text or msg.text not in MAIN_BUTTONS:
         return
 
     user_id = msg.from_user.id
@@ -296,6 +292,38 @@ async def handle_reply_text(c, msg):
             "4️⃣ <b>Safety:</b> Always use fresh IPs/Proxy.",
             parse_mode=enums.ParseMode.HTML
         )
+
+# ==================================================================
+# ⌨️ CORE COMMANDS
+# ==================================================================
+
+@Client.on_message(filters.command(["menu", "home"]) & filters.private, group=-10)
+async def menu_command_handler(c, msg):
+    """Always-open menu command, kept separate from text button routing."""
+    user_id = msg.from_user.id
+    await add_user(user_id, msg.from_user.first_name or "User")
+    await show_main_menu(c, msg)
+
+
+@Client.on_message(filters.command(["help", "commands"]) & filters.private, group=-10)
+async def help_command_handler(c, msg):
+    text = (
+        "<b>📖 AVAILABLE COMMANDS</b>\\n"
+        f"{get_divider()}\\n\\n"
+        "🏠 <code>/start</code> — Start the bot\\n"
+        "📋 <code>/menu</code> — Open main menu\\n"
+        "💰 <code>/deposit</code> — Open deposit options\\n"
+        "🎟️ <code>/redeem CODE</code> — Redeem a code\\n"
+        "🛠️ <code>/admin</code> — Admin panel (admins only)\\n"
+        "📖 <code>/help</code> — Show this help"
+    )
+    await msg.reply_text(text, parse_mode=enums.ParseMode.HTML)
+
+
+@Client.on_message(filters.command("ping") & filters.private, group=-10)
+async def ping_command_handler(c, msg):
+    await msg.reply_text("🏓 <b>Pong! Bot is online.</b>", parse_mode=enums.ParseMode.HTML)
+
 
 # ==================================================================
 # 👤 PROFILE DASHBOARD
