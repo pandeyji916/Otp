@@ -36,10 +36,12 @@ async def start_bot():
     try:
         await app.set_bot_commands([
             BotCommand("start", "Open main menu"),
-            BotCommand("help", "Show commands and help"),
+            BotCommand("menu", "Show the keyboard again"),
+            BotCommand("help", "Show help and commands"),
             BotCommand("commands", "Open command center"),
             BotCommand("deposit", "Add balance"),
             BotCommand("redeem", "Redeem a coupon"),
+            BotCommand("ping", "Check bot status"),
         ])
     except Exception as e:
         print(f"⚠️ Command menu setup error: {e}")
