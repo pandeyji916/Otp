@@ -155,24 +155,35 @@ async def show_main_menu(client, message):
     )
 
     # Native Telegram coloured reply buttons (green = positive, blue = normal).
-    reply_kb = ReplyKeyboardMarkup(
+    keyboard_rows = [
         [
-            [
-                KeyboardButton("📱 Buy Accounts", style="success"),
-                KeyboardButton("📂 Buy Sessions", style="success"),
-            ],
-            [
-                KeyboardButton("💰 Deposit", style="success"),
-                KeyboardButton("👤 My Profile", style="primary"),
-            ],
-            [
-                KeyboardButton("💰 Earn Money", style="success"),
-                KeyboardButton("📞 Support", style="primary"),
-            ],
-            [KeyboardButton("📖 How to Use", style="primary")],
+            KeyboardButton("📱 Buy Accounts", style="success"),
+            KeyboardButton("📂 Buy Sessions", style="success"),
         ],
-        resize_keyboard=True
-    )
+        [
+            KeyboardButton("💰 Deposit", style="success"),
+            KeyboardButton("👤 My Profile", style="primary"),
+        ],
+        [
+            KeyboardButton("💰 Earn Money", style="success"),
+            KeyboardButton("📞 Support", style="primary"),
+        ],
+        [KeyboardButton("📖 How to Use", style="primary")],
+    ]
+
+    # Keep the reply keyboard persistent. If an older Hydrogram build does not
+    # support is_persistent, fall back without losing the keyboard.
+    try:
+        reply_kb = ReplyKeyboardMarkup(
+            keyboard_rows,
+            resize_keyboard=True,
+            is_persistent=True,
+        )
+    except TypeError:
+        reply_kb = ReplyKeyboardMarkup(
+            keyboard_rows,
+            resize_keyboard=True,
+        )
 
     msg_obj = message.message if isinstance(message, CallbackQuery) else message
 
@@ -311,7 +322,8 @@ async def help_command_handler(c, msg):
         "<b>📖 AVAILABLE COMMANDS</b>\n"
         f"{get_divider()}\n\n"
         "Choose an option below for commands and usage.\n"
-        "All options below are interactive."
+        "All options below are interactive.\n\n"
+        "⌨️ If the main keyboard is hidden, send <code>/menu</code> or <code>/start</code>."
     )
     buttons = InlineKeyboardMarkup([
         [InlineKeyboardButton("👤 User Commands", callback_data="help_user", style="success"),
