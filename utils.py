@@ -1,7 +1,6 @@
-from ui import InlineKeyboardButton
 import math
 import pycountry
-from hydrogram.types import InlineKeyboardMarkup
+from hydrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import USDT_RATE
 
 # ==================================================================

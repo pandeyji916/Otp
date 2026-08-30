@@ -3,6 +3,7 @@ import logging
 import sys
 from config import API_ID, API_HASH, BOT_TOKEN, ADMINS, LOG_CHANNEL, ADMIN_GROUP_ID
 from hydrogram import Client, idle, enums
+from hydrogram.types import BotCommand
 
 _background_tasks = set()
 
@@ -31,6 +32,18 @@ async def start_bot():
 
     await app.start()
     
+    # Telegram command menu (appears in the / commands button)
+    try:
+        await app.set_bot_commands([
+            BotCommand("start", "Open main menu"),
+            BotCommand("help", "Show commands and help"),
+            BotCommand("commands", "Open command center"),
+            BotCommand("deposit", "Add balance"),
+            BotCommand("redeem", "Redeem a coupon"),
+        ])
+    except Exception as e:
+        print(f"⚠️ Command menu setup error: {e}")
+
     me = await app.get_me()
     
     admin_text = (
