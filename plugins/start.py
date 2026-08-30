@@ -1,7 +1,7 @@
-from ui import InlineKeyboardButton, KeyboardButton
 import datetime
 from hydrogram import Client, filters, enums
-from hydrogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, CallbackQuery, Message
+from hydrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, CallbackQuery, Message
+from ui import KeyboardButton
 from database import add_user, get_user, get_fsub_list, get_maintenance, db, col_users, set_referrer, col_orders, col_payments
 from utils import format_price, get_divider, get_pagination_keyboard
 from config import DEFAULT_FSUB_ID, DEFAULT_FSUB_LINK, ADMINS
@@ -14,26 +14,6 @@ MAIN_BUTTONS = [
     "💰 Deposit", "👤 My Profile", 
     "💰 Earn Money", "📞 Support", "📖 How to Use"
 ]
-
-# Exact reply-keyboard button map. These are kept as dedicated handlers below
-# so Telegram reply-keyboard messages cannot be swallowed by state listeners.
-
-async def _ensure_menu_access(client, msg):
-    user_id = msg.from_user.id
-    if await get_maintenance() and user_id not in ADMINS:
-        await msg.reply_text("🚧 <b>BOT UNDER MAINTENANCE</b>", parse_mode=enums.ParseMode.HTML)
-        return False
-    if user_id in ADMINS:
-        return True
-    user = await get_user(user_id)
-    if not user or not user.get("terms_accepted"):
-        await show_terms(client, msg)
-        return False
-    is_joined, missing_channels = await check_fsub_status(client, user_id)
-    if not is_joined:
-        await show_fsub(client, msg, missing_channels)
-        return False
-    return True
 
 # ==================================================================
 # 🧠 LOGIC
@@ -154,22 +134,12 @@ async def show_main_menu(client, message):
         f"👇 <i>Select a service from the keyboard below.</i>"
     )
 
-    # Native Telegram coloured reply buttons (green = positive, blue = normal).
     reply_kb = ReplyKeyboardMarkup(
         [
-            [
-                KeyboardButton("📱 Buy Accounts", style="success"),
-                KeyboardButton("📂 Buy Sessions", style="success"),
-            ],
-            [
-                KeyboardButton("💰 Deposit", style="success"),
-                KeyboardButton("👤 My Profile", style="primary"),
-            ],
-            [
-                KeyboardButton("💰 Earn Money", style="success"),
-                KeyboardButton("📞 Support", style="primary"),
-            ],
-            [KeyboardButton("📖 How to Use", style="primary")],
+            [KeyboardButton("📱 Buy Accounts", style="success"), KeyboardButton("📂 Buy Sessions", style="success")],
+            [KeyboardButton("💰 Deposit", style="success"), KeyboardButton("👤 My Profile", style="primary")],
+            [KeyboardButton("💰 Earn Money", style="success"), KeyboardButton("📞 Support", style="primary")],
+            [KeyboardButton("📖 How to Use", style="primary")]
         ],
         resize_keyboard=True
     )
@@ -185,7 +155,7 @@ async def show_main_menu(client, message):
 # 🚦 STEP 2: HANDLERS
 # ==================================================================
 
-@Client.on_message(filters.command("start") & filters.private, group=-10)
+@Client.on_message(filters.command("start") & filters.private)
 async def start_handler(c, msg):
     user_id = msg.from_user.id
     
@@ -221,207 +191,123 @@ async def start_handler(c, msg):
     
     await show_main_menu(c, msg)
 
-# ==================================================================
-# ⌨️ REPLY KEYBOARD ROUTING (EXACT MATCHES)
-# ==================================================================
-# Dedicated handlers run before state listeners. This fixes reply-keyboard
-# buttons being ignored while /commands still work.
-
-@Client.on_message(filters.regex(r"^📱 Buy Accounts$") & filters.private, group=-20)
-async def keyboard_buy_accounts(c, msg):
-    if not await _ensure_menu_access(c, msg):
+@Client.on_message(filters.text & filters.private, group=1)
+async def handle_reply_text(c, msg):
+    if msg.text.startswith("/"):
+        msg.continue_propagation()
         return
-    from plugins.buy import show_category_list
-    await show_category_list(c, msg, forced_category="accounts")
 
-@Client.on_message(filters.regex(r"^📂 Buy Sessions$") & filters.private, group=-20)
-async def keyboard_buy_sessions(c, msg):
-    if not await _ensure_menu_access(c, msg):
+    if msg.text not in MAIN_BUTTONS:
+        msg.continue_propagation()
         return
-    from plugins.buy import show_category_list
-    await show_category_list(c, msg, forced_category="sessions")
 
-@Client.on_message(filters.regex(r"^💰 Deposit$") & filters.private, group=-20)
-async def keyboard_deposit(c, msg):
-    if not await _ensure_menu_access(c, msg):
-        return
-    from plugins.deposit import safe_deposit_menu
-    await safe_deposit_menu(c, msg)
-
-@Client.on_message(filters.regex(r"^👤 My Profile$") & filters.private, group=-20)
-async def keyboard_profile(c, msg):
-    if not await _ensure_menu_access(c, msg):
-        return
-    await show_profile_ui(c, msg)
-
-@Client.on_message(filters.regex(r"^💰 Earn Money$") & filters.private, group=-20)
-async def keyboard_earn(c, msg):
-    if not await _ensure_menu_access(c, msg):
-        return
     user_id = msg.from_user.id
-    bot_usr = (await c.get_me()).username
-    ref_link = f"https://t.me/{bot_usr}?start=ref_{user_id}"
-    text = (
-        "<b>💰 EARN MONEY & REWARDS</b>\n"
-        f"{get_divider()}\n"
-        "Invite friends and earn bonus balance!\n\n"
-        "🔗 <b>Your Referral Link:</b>\n"
-        f"<code>{ref_link}</code>\n\n"
-        "🎁 Use <code>/redeem CODE</code> to claim a valid reward code."
-    )
-    await msg.reply_text(text, parse_mode=enums.ParseMode.HTML)
+    
+    if await get_maintenance() and user_id not in ADMINS:
+        return await msg.reply_text("🚧 Maintenance Mode ON")
 
-@Client.on_message(filters.regex(r"^📞 Support$") & filters.private, group=-20)
-async def keyboard_support(c, msg):
-    if not await _ensure_menu_access(c, msg):
-        return
-    await msg.reply_text(
-        "<b>📞 CUSTOMER SUPPORT</b>\n"
-        f"{get_divider()}\n"
-        "Contact the support team shown in your bot configuration.",
-        parse_mode=enums.ParseMode.HTML
-    )
+    btn_text = msg.text
 
-@Client.on_message(filters.regex(r"^📖 How to Use$") & filters.private, group=-20)
-async def keyboard_howto(c, msg):
-    if not await _ensure_menu_access(c, msg):
-        return
-    await msg.reply_text(
-        "<b>📖 HOW TO USE</b>\n"
-        f"{get_divider()}\n"
-        "1️⃣ Deposit funds.\n2️⃣ Choose a product.\n3️⃣ Follow the order instructions.\n4️⃣ Check My Profile for your history.",
-        parse_mode=enums.ParseMode.HTML
-    )
+    # Admin Bypass Logic
+    if user_id not in ADMINS:
+        user = await get_user(user_id)
+        if not user or not user.get("terms_accepted"):
+            return await show_terms(c, msg)
+        
+        is_joined, link = await check_fsub_status(c, user_id)
+        if not is_joined:
+            return await show_fsub(c, msg, link)
+
+    # --- BUTTON HANDLERS ---
+    
+    if btn_text == "📱 Buy Accounts":
+        try:
+            from plugins.buy import show_category_list 
+            msg.data = "cat_accounts" 
+            await show_category_list(c, msg)
+        except ImportError:
+            await msg.reply_text("❌ Error: Buy plugin not found.")
+
+    elif btn_text == "📂 Buy Sessions":
+        try:
+            from plugins.buy import show_category_list
+            msg.data = "cat_sessions"
+            await show_category_list(c, msg)
+        except ImportError:
+            await msg.reply_text("❌ Error: Buy plugin not found.")
+
+    elif btn_text == "💰 Deposit":
+        try:
+            from plugins.deposit import safe_deposit_menu 
+            await safe_deposit_menu(c, msg)
+        except ImportError:
+             await msg.reply_text("❌ Error: Deposit plugin missing.")
+
+    elif btn_text == "👤 My Profile":
+        await show_profile_ui(c, msg)
+
+    # 🔥 NEW: EARN MONEY & REFERRAL
+    elif btn_text == "💰 Earn Money":
+        bot_usr = (await c.get_me()).username
+        ref_link = f"https://t.me/{bot_usr}?start=ref_{user_id}"
+        
+        text = (
+            "<b>💰 EARN MONEY & REWARDS</b>\n"
+            f"{get_divider()}\n"
+            "Invite friends and earn bonus balance!\n\n"
+            "<b>💸 How it works?</b>\n"
+            "1. Share your link with friends.\n"
+            "2. When your friend deposits total <b>₹1000</b>.\n"
+            "3. You instantly get <b>₹20 Bonus!</b>\n\n"
+            "🔗 <b>Your Referral Link:</b>\n"
+            f"<code>{ref_link}</code>\n\n"
+            "🎁 <b>Have a Coupon?</b>\n"
+            "Use <code>/redeem CODE</code> to claim rewards."
+        )
+        await msg.reply_text(text, parse_mode=enums.ParseMode.HTML)
+
+    elif btn_text == "📞 Support":
+        await msg.reply_text(
+            "📞 <b>Customer Support:</b>\n"
+"👤 @NAKS4PANDIT\n"
+"👤 @sourya791m_bot\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "<i>• Send Payment Proofs\n• Report Login Issues\n• Bulk Orders</i>",
+            parse_mode=enums.ParseMode.HTML
+        )
+
+    elif btn_text == "📖 How to Use":
+        await msg.reply_text(
+            "📖 <b>Quick User Guide:</b>\n"
+            f"{get_divider()}\n"
+            "1️⃣ <b>Deposit Funds:</b> Use UPI (Auto) or Crypto.\n"
+            "2️⃣ <b>Select Product:</b> Choose Country & Quantity.\n"
+            "3️⃣ <b>Get OTP:</b> Go to 'My Profile' > 'Orders' > 'Get OTP'.\n"
+            "4️⃣ <b>Safety:</b> Always use fresh IPs/Proxy.",
+            parse_mode=enums.ParseMode.HTML
+        )
 
 # ==================================================================
-# ⌨️ CORE COMMANDS
+# 📖 COMMANDS MENU
 # ==================================================================
 
-@Client.on_message(filters.command(["menu", "home"]) & filters.private, group=-10)
-async def menu_command_handler(c, msg):
-    """Always-open menu command, kept separate from text button routing."""
-    user_id = msg.from_user.id
-    await add_user(user_id, msg.from_user.first_name or "User")
-    await show_main_menu(c, msg)
-
-
-@Client.on_message(filters.command(["help", "commands"]) & filters.private, group=-10)
+@Client.on_message(filters.command(["help", "commands"]) & filters.private)
 async def help_command_handler(c, msg):
     text = (
-        "<b>📖 AVAILABLE COMMANDS</b>\n"
+        "<b>📖 COMMAND CENTER</b>\n"
         f"{get_divider()}\n\n"
-        "Choose an option below for commands and usage.\n"
-        "All options below are interactive."
+        "Use the buttons below or these commands:\n\n"
+        "▶️ /start - Open main menu\n"
+        "💰 /deposit - Add balance\n"
+        "🎁 /redeem CODE - Redeem a coupon\n"
+        "🛠 /admin - Admin panel (admins only)"
     )
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("👤 User Commands", callback_data="help_user", style="success"),
-         InlineKeyboardButton("💳 Payments", callback_data="help_payments", style="success")],
-        [InlineKeyboardButton("🛍 Store Guide", callback_data="help_store", style="primary")],
-        [InlineKeyboardButton("🛠️ Admin Commands", callback_data="help_admin", style="danger")],
-        [InlineKeyboardButton("🏠 Open Main Menu", callback_data="home", style="primary")],
+        [InlineKeyboardButton("🏠 Open Main Menu", callback_data="home")],
+        [InlineKeyboardButton("💰 Deposit", callback_data="deposit_home"),
+         InlineKeyboardButton("👤 My Profile", callback_data="my_profile")],
     ])
     await msg.reply_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.HTML)
-
-
-@Client.on_callback_query(filters.regex(r"^help_store$"))
-async def help_store_callback(c, cb):
-    body = (
-        "📱 <b>Buy Accounts</b> — Browse available account categories.\n"
-        "📂 <b>Buy Sessions</b> — Browse available session categories.\n"
-        "💰 <b>Deposit</b> — Add funds using available payment methods.\n"
-        "👤 <b>My Profile</b> — View wallet and order/payment history.\n\n"
-        "You can tap these colourful keyboard buttons directly — no slash command is required."
-    )
-    buttons = [
-        [InlineKeyboardButton("💳 Payments Help", callback_data="help_payments", style="success")],
-        [InlineKeyboardButton("👤 User Commands", callback_data="help_user", style="primary")],
-        [InlineKeyboardButton("🏠 Main Menu", callback_data="home", style="primary")],
-    ]
-    await _show_help_page(c, cb, "🛍 STORE GUIDE", body, buttons)
-
-
-async def _show_help_page(c, source, title, body, buttons):
-    text = f"<b>{title}</b>\n{get_divider()}\n\n{body}"
-    markup = InlineKeyboardMarkup(buttons)
-    if isinstance(source, CallbackQuery):
-        try:
-            await source.answer()
-            await source.message.edit_text(text, reply_markup=markup, parse_mode=enums.ParseMode.HTML)
-        except Exception:
-            await source.message.reply_text(text, reply_markup=markup, parse_mode=enums.ParseMode.HTML)
-    else:
-        await source.reply_text(text, reply_markup=markup, parse_mode=enums.ParseMode.HTML)
-
-
-@Client.on_callback_query(filters.regex(r"^help_user$"))
-async def help_user_callback(c, cb):
-    body = (
-        "🏠 <code>/start</code> — Start or refresh the bot\n"
-        "📋 <code>/menu</code> or <code>/home</code> — Open the main keyboard\n"
-        "📖 <code>/help</code> — Open this help center\n"
-        "🏓 <code>/ping</code> — Check whether the bot is online\n\n"
-        "You can also use the colourful keyboard buttons directly — no slash command is required."
-    )
-    buttons = [
-        [InlineKeyboardButton("💳 Payments Help", callback_data="help_payments", style="success")],
-        [InlineKeyboardButton("🛠️ Admin Help", callback_data="help_admin", style="primary")],
-        [InlineKeyboardButton("🔙 Help Home", callback_data="help_home", style="primary")],
-    ]
-    await _show_help_page(c, cb, "👤 USER COMMANDS", body, buttons)
-
-
-@Client.on_callback_query(filters.regex(r"^help_payments$"))
-async def help_payments_callback(c, cb):
-    body = (
-        "💰 <code>/deposit</code> — Open payment and deposit options\n"
-        "🎟️ <code>/redeem CODE</code> — Redeem a valid reward code\n\n"
-        "You can also tap <b>💰 Deposit</b> on the main keyboard. Follow the on-screen steps for your selected payment method."
-    )
-    buttons = [
-        [InlineKeyboardButton("👤 User Commands", callback_data="help_user", style="success")],
-        [InlineKeyboardButton("🏠 Open Main Menu", callback_data="help_home", style="primary")],
-    ]
-    await _show_help_page(c, cb, "💳 PAYMENTS & REWARDS", body, buttons)
-
-
-@Client.on_callback_query(filters.regex(r"^help_admin$"))
-async def help_admin_callback(c, cb):
-    if cb.from_user.id not in ADMINS:
-        return await cb.answer("Admins only.", show_alert=True)
-    body = (
-        "🛠️ <code>/admin</code> — Open the admin dashboard\n"
-        "🎟️ <code>/add_redeem</code> — Create/manage redeem codes (admin workflow)\n"
-        "🏓 <code>/ping</code> — Check bot status\n\n"
-        "Use the colourful admin dashboard buttons for Stock, Payments, Broadcast, Users and Settings."
-    )
-    buttons = [
-        [InlineKeyboardButton("🏠 Open Main Menu", callback_data="help_home", style="primary")],
-        [InlineKeyboardButton("🔙 Help Home", callback_data="help_home", style="primary")],
-    ]
-    await _show_help_page(c, cb, "🛠️ ADMIN COMMANDS", body, buttons)
-
-
-@Client.on_callback_query(filters.regex(r"^help_home$"))
-async def help_home_callback(c, cb):
-    text = (
-        "<b>📖 HELP & COMMAND CENTER</b>\n"
-        f"{get_divider()}\n\n"
-        "Choose a category below to see the available commands and features."
-    )
-    buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("👤 User Commands", callback_data="help_user", style="success"),
-         InlineKeyboardButton("💳 Payments", callback_data="help_payments", style="success")],
-        [InlineKeyboardButton("🛠️ Admin Commands", callback_data="help_admin", style="primary")],
-        [InlineKeyboardButton("🏠 Open Main Menu", callback_data="home", style="primary")],
-    ])
-    await cb.answer()
-    await cb.message.edit_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.HTML)
-
-
-@Client.on_message(filters.command("ping") & filters.private, group=-10)
-async def ping_command_handler(c, msg):
-    await msg.reply_text("🏓 <b>Pong! Bot is online.</b>", parse_mode=enums.ParseMode.HTML)
-
 
 # ==================================================================
 # 👤 PROFILE DASHBOARD
@@ -599,7 +485,7 @@ async def verify_fsub_callback(c, cb):
     else:
         await cb.answer("❌ You haven't joined yet!", show_alert=True)
 
-@Client.on_callback_query(filters.regex(r"^home$")) 
+@Client.on_callback_query(filters.regex("^home$")) 
 async def back_to_home(c, cb):
     await show_main_menu(c, cb)
 
